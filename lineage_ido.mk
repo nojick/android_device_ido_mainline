@@ -13,18 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # 
-ifndef TARGET_KERNEL_USE
-TARGET_KERNEL_USE := mainline
-endif
 KERNEL_MODS := $(wildcard /out/target/product/ido/obj/KERNEL_OBJ/*.ko)
 
 # Following modules go to vendor partition
 VENDOR_KERN_MODS :=
-//BOARD_VENDOR_KERNEL_MODULES := $(filter $(VENDOR_KERN_MODS),$(KERNEL_MODS))
+BOARD_VENDOR_KERNEL_MODULES := $(filter $(VENDOR_KERN_MODS),$(KERNEL_MODS))
 BOARD_VENDOR_KERNEL_MODULES := $(addprefix $(KERNEL_MODS)/, $(notdir $(BOARD_VENDOR_KERNEL_MODULES_LOAD)))
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(addprefix $(KERNEL_MODS)/, $(notdir $(BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD)))
 # All other modules go to ramdisk
-//BOARD_GENERIC_RAMDISK_KERNEL_MODULES := $(filter-out $(VENDOR_KERN_MODS),$(KERNEL_MODS))
+BOARD_GENERIC_RAMDISK_KERNEL_MODULES := $(filter-out $(VENDOR_KERN_MODS),$(KERNEL_MODS))
 
 
 # Inherit from those products. Most specific first
@@ -35,6 +32,8 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/updatable_apex.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
 $(call inherit-product, frameworks/native/build/phone-xhdpi-2048-dalvik-heap.mk)
+# Enable Scoped Storage related
+$(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
 
 PRODUCT_NAME := lineage_ido
 PRODUCT_DEVICE := ido

@@ -31,8 +31,7 @@ TARGET_2ND_CPU_ABI := armeabi-v7a
 TARGET_2ND_CPU_ABI2 := armeabi
 
 # Kernel cmdline parameters
-BOARD_KERNEL_CMDLINE += androidboot.hardware=qcom androidboot.boot_devices=soc/7824900.sdhci
-BOARD_KERNEL_CMDLINE += androidboot.memcg=1 cgroup.memory=nokmem
+BOARD_KERNEL_CMDLINE += androidboot.hardware=qcom androidboot.boot_devices=soc/7824900.mmc
 BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
 BOARD_KERNEL_IMAGE_NAME := Image.gz
 TARGET_KERNEL_CONFIG := msm8916_defconfig
@@ -50,7 +49,7 @@ TARGET_NO_KERNEL := false
 TARGET_NO_RECOVERY := false
 
 # boot.img
-BOARD_BOOTIMAGE_PARTITION_SIZE := 33554432
+BOARD_BOOTIMAGE_PARTITION_SIZE := 32000000
 
 # Filesystem
 BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4

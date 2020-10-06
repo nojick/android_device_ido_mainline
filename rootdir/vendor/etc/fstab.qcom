@@ -1,0 +1,27 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Android ramdisk fstab file.
+
+/dev/block/platform/soc/7824900.sdhci/by-name/system   /system    ext4    noatime,rw    wait,first_stage_mount
+/dev/block/platform/soc/7824900.sdhci/by-name/cust     /vendor    ext4    noatime,rw   wait,first_stage_mount
+/dev/block/platform/soc/7824900.sdhci/by-name/cache	/cache  	ext4	nosuid,nodev,noatime,barrier=1,data=ordered                        	wait,check 
+
+# Android fstab file.
+
+/dev/block/platform/soc/7824900.sdhci/by-name/userdata    /data                   ext4    noatime,nosuid,nodev,barrier=1,noauto_da_alloc                             latemount,wait,check,encryptable=footer,formattable,length=-16384
+/dev/block/platform/soc/7824900.sdhci/by-name/modem       /vendor/firmware_mnt    vfat    ro,context=u:object_r:vendor_firmware_file:s0    latemount,wait
+/dev/block/platform/soc@0/7824900.mmc/by-name/persist /vendor/odm/persist ext4 noatime,ro,noauto_da_alloc wait
+/devices/platform/soc/7864900.sdhci/mmc_host/mmc*         auto                    auto    defaults                                         voldmanaged=sdcard1:auto
+
+/dev/block/zram0                                          none                    swap    defaults                                         zramsize=536870912,max_comp_streams=8
