@@ -1,0 +1,95 @@
+#
+# Copyright 2020, Pavel Dubrova <pashadubrova@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+on early-init
+    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -a -d \
+        /vendor/lib/modules msm gpu-sched ip6table_filter ip6table_mangle ip6table_nat ip6_tables ip6table_raw ip6t_NPT ip6t_REJECT ip6t_rpfilter nf_reject_ipv6 nf_socket_ipv4 nf_socket_ipv6 nf_tproxy_ipv4 nf_tproxy_ipv6 xt_hashlimit xt_HMARK xt_socket xt_TPROXY fake_battery edt-ft5x06 i2c-qcom-cci i2c-stub q6adm q6afe q6afe-clocks q6afe-dai q6asm q6asm-dai q6core q6cvp q6cvs q6dsp-common q6mvm q6routing q6voice q6voice-common q6voice-dai snd-compress snd-pcm snd-soc-apq8016-sbc snd-soc-core snd-soc-hdmi-codec snd-soc-lpass-apq8016 snd-soc-lpass-cpu snd-soc-lpass-platform snd-soc-msm8916-analog snd-soc-msm8916-digital snd-soc-msm8916-qdsp6 snd-soc-qcom-common snd-soc-simple-card-utils snd-timer
+
+on fs
+    mount_all /vendor/etc/fstab.qcom
+    swapon_all /vendor/etc/fstab.qcom
+    #WCNSS Firmware load
+    write /sys/module/firmware_class/parameters/path "/vendor/firmware/"
+on early-boot
+    mount debugfs debugfs /sys/kernel/debug
+    chmod 755 /sys/kernel/debug
+    chmod 755 /sys/kernel/debug/sync
+    chown graphics graphics /sys/kernel/debug/sync/sw_sync
+    chmod 777 /sys/kernel/debug/sync/sw_sync
+    chown graphics graphics /sys/kernel/debug/sync/info
+
+on zygote-start
+    mkdir /data/vendor/wifi 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa/sockets 0770 wifi wifi
+
+service wpa_supplicant /vendor/bin/hw/wpa_supplicant \
+                       -Dnl80211 -g@android:wpa_wlan0
+    interface android.hardware.wifi.supplicant@1.0::ISupplicant default
+    interface android.hardware.wifi.supplicant@1.1::ISupplicant default
+    socket wpa_wlan0 dgram 660 wifi wifi
+    class main
+    disabled
+    oneshot
+
+# Logcat Services
+service boot_log /system/bin/logcat -b all -D -f /data/local/tmp/boot_log_full.txt
+    class main
+    user root
+    group root system
+    disabled
+    oneshot
+
+service boot_log_crash /system/bin/logcat -b crash -D -f /data/local/tmp/boot_log_crash.txt
+    class main
+    user root
+    group root system
+    disabled
+    oneshot
+
+service boot_log_kernel /system/bin/logcat -b kernel -D -f /data/local/tmp/boot_log_kernel.txt
+    class main
+    user root
+    group root system
+    disabled
+    oneshot
+
+service boot_dmesg /system/bin/sh -c "dmesg -w > /data/local/tmp/boot_dmesg.txt"
+    class main
+    user root
+    group root system
+    disabled
+    oneshot
+
+on post-fs-data
+# Clear existing log and start the service
+    rm /data/local/tmp/boot_log_full.txt
+    rm /data/local/tmp/boot_log_crash.txt
+    rm /data/local/tmp/boot_log_kernel.txt
+    rm /data/local/tmp/boot_dmesg.txt
+    start boot_log
+    start boot_log_crash
+    start boot_log_kernel
+    start boot_dmesg
+
+
+
+on property:sys.boot_completed=1
+# Stop the logger service
+#   stop boot_log
+#   stop boot_dmesg
+    stop boot_log_crash
+    stop boot_log_kernel
