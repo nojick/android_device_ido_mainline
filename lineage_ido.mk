@@ -27,7 +27,7 @@ BOARD_GENERIC_RAMDISK_KERNEL_MODULES := $(filter-out $(VENDOR_KERN_MODS),$(KERNE
 # Inherit from those products. Most specific first
 $(call inherit-product, device/xiaomi/ido/device.mk)
 # Inherit some common Lineage stuff
-$(call inherit-product, vendor/lineage/config/common_mobile.mk)
+$(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/updatable_apex.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
