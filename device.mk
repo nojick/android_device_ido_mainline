@@ -115,6 +115,12 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     lights.msm8939 \
     android.hardware.lights-service.qti
+
+PRODUCT_PACKAGES += \
+    sensors.iio \
+    android.hardware.sensors@1.0-impl:64 \
+    android.hardware.sensors@1.0-service
+
     
 # Memtrack
 #PRODUCT_PACKAGES += \
@@ -191,11 +197,8 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/rootdir/vendor/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.qcom \
     $(LOCAL_PATH)/rootdir/vendor/etc/init/init.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.rc \
     $(LOCAL_PATH)/rootdir/vendor/etc/init/init.usb.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.usb.rc \
-    $(LOCAL_PATH)/rootdir/vendor/ueventd.rc:$(TARGET_COPY_OUT_VENDOR)/ueventd.rc
-
-//BOARD_VENDOR_KERNEL_MODULES := \
-//    $(foreach module,$(wildcard $(KERNEL_PATH)/modules/*.ko), \
-//        $(module))
+    $(LOCAL_PATH)/rootdir/vendor/ueventd.rc:$(TARGET_COPY_OUT_VENDOR)/ueventd.rc \
+    $(LOCAL_PATH)/rootdir/vendor/etc/init/sensors.ido.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/sensors.ido.rc \
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hardware.gralloc=minigbm_msm \
