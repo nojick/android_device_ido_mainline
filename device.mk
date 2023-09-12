@@ -207,6 +207,11 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.opengles.version=196608 \
     ro.sf.lcd_density=320 \
 
+# HACK: Avoid usb crash
+PRODUCT_PRODUCT_PROPERTIES := \
+    persist.adb.nonblocking_ffs=0 \
+    ro.adb.nonblocking_ffs=0
+
 # Wi-Fi interface name
 PRODUCT_PROPERTY_OVERRIDES += \
     wifi.interface=wlan0
