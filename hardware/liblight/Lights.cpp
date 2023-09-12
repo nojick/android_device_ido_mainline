@@ -78,9 +78,9 @@ enum rgb_led {
 };
 
 static const char *rgb_led_name[] = {
-    [LED_RED] = "red",
-    [LED_GREEN] = "green",
-    [LED_BLUE] = "blue",
+    [LED_RED] = "red:indicator",
+    [LED_GREEN] = "green:indicator",
+    [LED_BLUE] = "blue:indicator",
 };
 
 static int write_str_to_file(const char *path, char const *str) {

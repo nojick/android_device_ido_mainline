@@ -113,8 +113,7 @@ PRODUCT_PACKAGES += \
 
 # Lights AIDL HALs
 PRODUCT_PACKAGES += \
-    lights.msm8939 \
-    android.hardware.lights-service.qti
+    vendor.qti.hardware.lights.service
 
 PRODUCT_PACKAGES += \
     sensors.iio \
