@@ -20,3 +20,19 @@ service vendor.qti.light /vendor/bin/hw/vendor.qti.hardware.lights.service
     user system
     group system
     shutdown critical
+on init
+    # Notification LED
+    chown system system /sys/class/backlight/backlight/brightness
+    chmod 0660 /sys/class/backlight/backlight/brightness
+    chown system system /sys/class/leds/red:indicator/brightness
+    chmod 0660 /sys/class/leds/red:indicator/brightness
+    chown system system /sys/class/leds/green:indicator/brightness
+    chmod 0660 /sys/class/leds/green:indicator/brightness
+    chown system system /sys/class/leds/blue:indicator/brightness
+    chmod 0660 /sys/class/leds/blue:indicator/brightness
+    chown system system /sys/class/leds/red:indicator/trigger
+    chmod 0660 /sys/class/leds/red:indicator/trigger
+    chown system system /sys/class/leds/green:indicator/trigger
+    chmod 0660 /sys/class/leds/green:indicator/trigger
+    chown system system /sys/class/leds/blue:indicator/trigger
+    chmod 0660 /sys/class/leds/blue:indicator/trigger
