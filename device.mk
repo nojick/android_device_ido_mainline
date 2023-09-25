@@ -192,6 +192,15 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/firmware/venus.b04:$(TARGET_COPY_OUT_VENDOR)/firmware/qcom/venus-1.8/venus.b04 \
     $(LOCAL_PATH)/firmware/venus.mbn:$(TARGET_COPY_OUT_VENDOR)/firmware/qcom/venus-1.8/venus.mbn \
     $(LOCAL_PATH)/firmware/venus.mdt:$(TARGET_COPY_OUT_VENDOR)/firmware/qcom/venus-1.8/venus.mdt \
+    $(LOCAL_PATH)/firmware/wcnss.b00:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.b00 \
+    $(LOCAL_PATH)/firmware/wcnss.b01:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.b01 \
+    $(LOCAL_PATH)/firmware/wcnss.b02:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.b02 \
+    $(LOCAL_PATH)/firmware/wcnss.b04:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.b04 \
+    $(LOCAL_PATH)/firmware/wcnss.b06:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.b06 \
+    $(LOCAL_PATH)/firmware/wcnss.b09:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.b09 \
+    $(LOCAL_PATH)/firmware/wcnss.b10:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.b10 \
+    $(LOCAL_PATH)/firmware/wcnss.b11:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.b11 \
+    $(LOCAL_PATH)/firmware/wcnss.mdt:$(TARGET_COPY_OUT_VENDOR)/firmware/wcnss.mdt \
 
 # Specific Permissions
 PRODUCT_COPY_FILES += \
