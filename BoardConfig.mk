@@ -31,7 +31,7 @@ TARGET_2ND_CPU_ABI := armeabi-v7a
 TARGET_2ND_CPU_ABI2 := armeabi
 
 # Kernel cmdline parameters
-BOARD_KERNEL_CMDLINE += androidboot.hardware=qcom androidboot.boot_devices=soc/7824900.mmc
+BOARD_KERNEL_CMDLINE += androidboot.hardware=qcom androidboot.boot_devices=soc@0/7824900.mmc
 BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
 BOARD_KERNEL_IMAGE_NAME := Image.gz
 TARGET_KERNEL_CONFIG := msm8916_defconfig
