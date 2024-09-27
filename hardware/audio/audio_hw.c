@@ -279,7 +279,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
              adev->out_devices &= ~AUDIO_DEVICE_OUT_ALL;
              adev->out_devices |= val;
         }
-         do_out_standby(adev);
+         do_output_standby(out);
                     select_devices(adev);
         pthread_mutex_unlock(&out->lock);
         pthread_mutex_unlock(&adev->lock);
