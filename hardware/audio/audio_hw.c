@@ -265,7 +265,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
     struct alsa_stream_out *out = (struct alsa_stream_out *)stream;
     struct alsa_audio_device *adev = out->dev;
     struct str_parms *parms;
-    char value[32];
+    char value[256];
     int ret, val = 0;
 
     parms = str_parms_create_str(kvpairs);
@@ -279,6 +279,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
              adev->out_devices &= ~AUDIO_DEVICE_OUT_ALL;
              adev->out_devices |= val;
         }
+         do_out_standby(adev);
                     select_devices(adev);
         pthread_mutex_unlock(&out->lock);
         pthread_mutex_unlock(&adev->lock);
@@ -394,7 +395,7 @@ static int out_remove_audio_effect(const struct audio_stream *stream, effect_han
 static int out_get_next_write_timestamp(const struct audio_stream_out *stream,
         int64_t *timestamp)
 {
-    *timestamp = 0;
+    //*timestamp = 0;
     ALOGV("out_get_next_write_timestamp: %ld", (long int)(*timestamp));
     return -ENOSYS;
 }
