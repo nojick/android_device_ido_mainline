@@ -1,0 +1,34 @@
+
+<mixer>
+		<ctl name="PRI_MI2S_RX Audio Mixer MultiMedia1" value="1" />
+		<ctl name="MultiMedia2 Mixer TERT_MI2S_TX" value="1" />
+		<ctl name="QUAT_MI2S_RX Audio Mixer MultiMedia3" value="1" />
+		<ctl name="PRI_MI2S_RX Audio Mixer MultiMedia4" value="1" />
+		<ctl name="PRI_MI2S_RX Voice Mixer CS-Voice" value="1" />
+		<ctl name="CS-Voice Capture Mixer TERT_MI2S_TX" value="1" />
+		<ctl name="TX1 HPF Switch" value="1" />
+		<ctl name="RX1 Digital Volume" value="87" />
+		<ctl name="RX2 Digital Volume" value="87" />
+		<ctl name="RX3 Digital Volume" value="87" />
+
+	<path name="speaker">
+		<ctl name="RX2 MIX1 INP1" value="RX2" />
+		<ctl name="RDAC2 MUX" value="RX2" />
+		<ctl name="HPHR" value="Switch" />
+		<ctl name="RX1 MIX1 INP1" value="RX1" />
+		<ctl name="HPHL" value="Switch" />
+		<ctl name="Speaker Switch" value="1" />
+		<ctl name="Headphones Switch" value="0" />
+	</path>
+	
+	<path name="headphones">
+		<ctl name="RX1 MIX1 INP1" value="RX1" />
+		<ctl name="RX2 MIX1 INP1" value="RX2" />
+		<ctl name="RDAC2 MUX" value="RX2" />
+		<ctl name="HPHL" value="Switch" />
+		<ctl name="HPHR" value="Switch" />
+		<ctl name="Headphones Switch" value="1" />
+		<ctl name="Speaker Switch" value="0" />
+	</path>
+</mixer>
+
