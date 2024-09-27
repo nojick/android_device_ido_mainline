@@ -15,7 +15,7 @@
  */
 
 #define LOG_TAG "audio_hw_primary"
-//#define LOG_NDEBUG 0
+#define LOG_NDEBUG 0
 
 #include <errno.h>
 #include <malloc.h>
@@ -270,7 +270,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
 
     parms = str_parms_create_str(kvpairs);
 
-    ret = str_parms_get_str(parms, AUDIO_PARAMETER_STREAM_ROUTING, value, sizeof(value));
+        ret = str_parms_get_str(parms, AUDIO_PARAMETER_STREAM_ROUTING, value, sizeof(value));
     if (ret >= 0) {
         val = atoi(value);
         pthread_mutex_lock(&adev->lock);
@@ -285,7 +285,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
     }
 
     str_parms_destroy(parms);
-    return ret;
+     return 0;
 }
 
 static char * out_get_parameters(const struct audio_stream *stream, const char *keys)
@@ -353,9 +353,8 @@ exit:
 static int out_get_render_position(const struct audio_stream_out *stream,
         uint32_t *dsp_frames)
 {
-    *dsp_frames = 0;
     ALOGV("out_get_render_position: dsp_frames: %p", dsp_frames);
-    return -EINVAL;
+    return -ENOSYS;
 }
 
 static int out_get_presentation_position(const struct audio_stream_out *stream,
@@ -397,7 +396,7 @@ static int out_get_next_write_timestamp(const struct audio_stream_out *stream,
 {
     *timestamp = 0;
     ALOGV("out_get_next_write_timestamp: %ld", (long int)(*timestamp));
-    return -EINVAL;
+    return -ENOSYS;
 }
 
 /** audio_stream_in implementation **/
@@ -614,17 +613,17 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     ALOGV("adev_open_output_stream...");
 
     struct alsa_audio_device *ladev = (struct alsa_audio_device *)dev;
-    struct alsa_stream_out *out;
-    struct pcm_params *params;
-    int ret = 0;
 
-    params = pcm_params_get(CARD_OUT, PORT_CODEC, PCM_OUT);
-    if (!params)
-        return -ENOSYS;
+    struct pcm_params* params = pcm_params_get(CARD_OUT, PORT_CODEC, PCM_OUT);
+    if (!params) {
+         return -ENOSYS;
+    }
 
-    out = (struct alsa_stream_out *)calloc(1, sizeof(struct alsa_stream_out));
-    if (!out)
-        return -ENOMEM;
+    struct alsa_stream_out* out =
+            (struct alsa_stream_out*)calloc(1, sizeof(struct alsa_stream_out));
+    if (!out) {
+         return -ENOMEM;
+    }
 
     out->stream.common.get_sample_rate = out_get_sample_rate;
     out->stream.common.set_sample_rate = out_set_sample_rate;
@@ -657,7 +656,7 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
         config->sample_rate = out->config.rate;
         config->format = audio_format_from_pcm_format(out->config.format);
         config->channel_mask = audio_channel_out_mask_from_count(CHANNEL_STEREO);
-        ret = -EINVAL;
+        goto error_1;
     }
 
     ALOGI("adev_open_output_stream selects channels=%d rate=%d format=%d",
@@ -674,6 +673,9 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     *stream_out = &out->stream;
 
     return 0;
+error_1:
+    free(out);
+    return -EINVAL;
 }
 
 static void adev_close_output_stream(struct audio_hw_device *dev,
@@ -781,17 +783,16 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     ALOGV("adev_open_input_stream...");
 
     struct alsa_audio_device *ladev = (struct alsa_audio_device *)dev;
-    struct alsa_stream_in *in;
-    struct pcm_params *params;
-    int ret = 0;
 
-    params = pcm_params_get(CARD_IN, PORT_BUILTIN_MIC, PCM_IN);
-    if (!params)
-        return -ENOSYS;
+    struct pcm_params* params = pcm_params_get(CARD_IN, PORT_BUILTIN_MIC, PCM_IN);
+    if (!params) {
+         return -ENOSYS;
+    }
 
-    in = (struct alsa_stream_in *)calloc(1, sizeof(struct alsa_stream_in));
-    if (!in)
-        return -ENOMEM;
+    struct alsa_stream_in* in = (struct alsa_stream_in*)calloc(1, sizeof(struct alsa_stream_in));
+    if (!in) {
+         return -ENOMEM;
+    }
 
     in->stream.common.get_sample_rate = in_get_sample_rate;
     in->stream.common.set_sample_rate = in_set_sample_rate;
@@ -818,7 +819,10 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     if (in->config.rate != config->sample_rate ||
            audio_channel_count_from_in_mask(config->channel_mask) != CHANNEL_STEREO ||
                in->config.format !=  pcm_format_from_audio_format(config->format) ) {
-        ret = -EINVAL;
+        config->format = in_get_format(&in->stream.common);
+        config->channel_mask = in_get_channels(&in->stream.common);
+        config->sample_rate = in_get_sample_rate(&in->stream.common);
+        goto error_1;
     }
 
     ALOGI("adev_open_input_stream selects channels=%d rate=%d format=%d",
@@ -828,17 +832,12 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     in->standby = true;
     in->unavailable = false;
 
-    config->format = in_get_format(&in->stream.common);
-    config->channel_mask = in_get_channels(&in->stream.common);
-    config->sample_rate = in_get_sample_rate(&in->stream.common);
+    *stream_in = &in->stream;
+    return 0;
 
-    if (ret) {
-        free(in);
-    } else {
-        *stream_in = &in->stream;
-    }
-
-    return ret;
+error_1:
+    free(in);
+    return -EINVAL;
  }
 
 static void adev_close_input_stream(struct audio_hw_device *dev,
@@ -860,7 +859,8 @@ static int adev_close(hw_device_t *device)
 {
     ALOGV("adev_close");
     struct alsa_audio_device *adev = (struct alsa_audio_device *)device;
-    audio_route_free(adev->audio_route);    
+    audio_route_free(adev->audio_route);
+    mixer_close(adev->mixer);    
     free(device);
     return 0;
 }
@@ -868,16 +868,16 @@ static int adev_close(hw_device_t *device)
 static int adev_open(const hw_module_t* module, const char* name,
         hw_device_t** device)
 {
-    struct alsa_audio_device *adev;
-
     ALOGV("adev_open: %s", name);
 
-    if (strcmp(name, AUDIO_HARDWARE_INTERFACE) != 0)
+    if (strcmp(name, AUDIO_HARDWARE_INTERFACE) != 0) {
         return -EINVAL;
+    }
 
-    adev = calloc(1, sizeof(struct alsa_audio_device));
-    if (!adev)
-        return -ENOMEM;
+    struct alsa_audio_device* adev = calloc(1, sizeof(struct alsa_audio_device));
+    if (!adev) {
+         return -ENOMEM;
+    }
 
     adev->hw_device.common.tag = HARDWARE_DEVICE_TAG;
     adev->hw_device.common.version = AUDIO_DEVICE_API_VERSION_2_0;
@@ -905,21 +905,35 @@ static int adev_open(const hw_module_t* module, const char* name,
      
     if (!adev->mixer) {
         ALOGE("Unable to open the mixer, aborting.");
-        return -EINVAL;
+        goto error_1;
     }
 
     adev->audio_route = audio_route_init(CARD_OUT, MIXER_XML_PATH);
     if (!adev->audio_route) {
         ALOGE("%s: Failed to init audio route controls, aborting.", __func__);
-        return -EINVAL;
+        goto error_2;
     }
 
+    pthread_mutex_lock(&adev->lock);
     adev->out_devices = AUDIO_DEVICE_OUT_SPEAKER;
+    if (!adev->out_devices) {
+         ALOGE("%s: Failed to init audio route controls, aborting.", __func__);
+        goto error_3;
+     }
+     pthread_mutex_unlock(&adev->lock);
     adev->in_devices = AUDIO_DEVICE_IN_BUILTIN_MIC & ~AUDIO_DEVICE_BIT_IN;
 
     *device = &adev->hw_device.common;
 
     return 0;
+
+error_3:
+    audio_route_free(adev->audio_route);
+error_2:
+    mixer_close(adev->mixer);
+error_1:
+    free(adev);
+    return -EINVAL;
 }
 
 static struct hw_module_methods_t hal_module_methods = {
