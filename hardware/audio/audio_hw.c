@@ -46,7 +46,7 @@
 
 #define CARD_OUT 0
 #define PORT_CODEC 0
-#define CARD_IN 0
+#define CARD_IN 1
 #define PORT_BUILTIN_MIC 1
 
 #define MIXER_XML_PATH "/vendor/etc/mixer_paths.xml"
@@ -78,6 +78,8 @@
 #define PLAYBACK_PERIOD_START_THRESHOLD 2
 #define PLAYBACK_CODEC_SAMPLING_RATE 48000
 #define MIN_WRITE_SLEEP_US      2000
+extern void q6voiced_open();
+extern void q6voiced_close();
 
 struct alsa_audio_device {
     struct audio_hw_device hw_device;
@@ -124,24 +126,44 @@ static void select_devices(struct alsa_audio_device *adev)
     int headphones_on;
     int speaker_on;
     int headset_mic_on;
-
-    headphones_on = adev->out_devices & (AUDIO_DEVICE_OUT_WIRED_HEADSET |
-                                    AUDIO_DEVICE_OUT_WIRED_HEADPHONE);
+    int headset;
+    int voice_call;
+    int earpiece;
+        //This is what the phone uses when calling
+    //earpiece = adev->out_devices & AUDIO_DEVICE_OUT_EARPIECE;
+    //when connecting wired headphones, the system defines them as a HEADSET, but we configure the HEADPHONE
+    headphones_on = adev->out_devices & (AUDIO_DEVICE_OUT_WIRED_HEADSET | 
+    							AUDIO_DEVICE_OUT_WIRED_HEADPHONE);
     speaker_on = adev->out_devices & AUDIO_DEVICE_OUT_SPEAKER;
-    headset_mic_on = adev->in_devices & AUDIO_DEVICE_IN_WIRED_HEADSET;
+    earpiece = adev->out_devices & AUDIO_DEVICE_OUT_EARPIECE;
+    
+    //unused
+    voice_call = adev->in_devices & AUDIO_DEVICE_IN_VOICE_CALL;
+    //the talking microphone that is located at the bottom
+    headset_mic_on = adev->in_devices & AUDIO_DEVICE_IN_BUILTIN_MIC;
+    // microphone of wired headphones
+    headset = adev->in_devices & AUDIO_DEVICE_IN_WIRED_HEADSET;
+    
 
     audio_route_reset(adev->audio_route);
 
-    if (speaker_on)
+    if (speaker_on || earpiece)
         audio_route_apply_path(adev->audio_route, "speaker");
     if (headphones_on)
         audio_route_apply_path(adev->audio_route, "headphones");
+    if (headset)
+        audio_route_apply_path(adev->audio_route, "headset");
     if (headset_mic_on)
-        audio_route_apply_path(adev->audio_route, "headset-mic");
+        audio_route_apply_path(adev->audio_route, "mic");
+    if (voice_call)
+        audio_route_apply_path(adev->audio_route, "voice");
+    if (earpiece)
+        audio_route_apply_path(adev->audio_route, "earpiece");
 
     audio_route_update_mixer(adev->audio_route);
 
-    ALOGV("hp=%c speaker=%c headset-mic=%c", headphones_on ? 'y' : 'n', speaker_on ? 'y' : 'n', headset_mic_on ? 'y' : 'n');
+    ALOGV("headphones=%c speaker=%c mic=%c voice=%c headset=%c earpiece=%c", headphones_on ? 'y' : 'n', speaker_on ? 'y' : 'n',
+    						headset_mic_on ? 'y' : 'n', voice_call ? 'y' : 'n', headset ? 'y' : 'n', earpiece ? 'y' : 'n');
 }
 
 /* must be called with hw device and output stream mutexes locked */
@@ -477,7 +499,7 @@ static int in_set_format(struct audio_stream *stream, audio_format_t format)
 
 static size_t in_get_buffer_size(const struct audio_stream *stream)
 {
-
+    struct alsa_stream_in* in = (struct alsa_stream_in*)stream;
     size_t buffer_size = get_input_buffer_size(stream->get_format(stream),
                             stream->get_channels(stream));
     ALOGV("in_get_buffer_size: %zu", buffer_size);
@@ -555,7 +577,7 @@ static ssize_t in_read(struct audio_stream_in *stream, void* buffer,
             ALOGE("start_input_stream failed with code %d", ret);
             goto exit;
         }
-        in->standby = 0;
+        in->standby = false;
     }
 
     pthread_mutex_unlock(&adev->lock);
@@ -569,18 +591,14 @@ static ssize_t in_read(struct audio_stream_in *stream, void* buffer,
         ALOGE("pcm_read failed with code %d", ret);
     }
 
-    /*
-     * Instead of writing zeroes here, we could trust the hardware
-     * to always provide zeroes when muted.
-     */
-    if (ret == 0 && adev->mic_mute)
-        memset(buffer, 0, bytes);
-
 exit:
     pthread_mutex_unlock(&in->lock);
 
+    if (adev->mic_mute) {
+        memset(buffer, 0, bytes);
+    }
+
     if (ret != 0) {
-        in_standby(&in->stream.common);
         usleep((int64_t)bytes * 1000000 / audio_stream_in_frame_size(stream) /
                 in_get_sample_rate(&stream->common));
     }
@@ -737,29 +755,28 @@ static int adev_get_master_mute(struct audio_hw_device *dev, bool *muted)
 
 static int adev_set_mode(struct audio_hw_device *dev, audio_mode_t mode)
 {
-    ALOGV("adev_set_mode: %d", mode);
+    if (mode == AUDIO_MODE_IN_CALL)
+        q6voiced_open();
+    else
+        q6voiced_close();
+
+    ALOGV("adev_set_mode: %d", mode);    
     return 0;
 }
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 {
     ALOGV("adev_set_mic_mute: %d",state);
-    
     struct alsa_audio_device *adev = (struct alsa_audio_device *)dev;
-    
     adev->mic_mute = state;
-
     return 0;
 }
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 {
     ALOGV("adev_get_mic_mute");
-
     struct alsa_audio_device *adev = (struct alsa_audio_device *)dev;
-
     *state = adev->mic_mute;
-
     return 0;
 }
 
@@ -778,7 +795,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
         struct audio_stream_in **stream_in,
         audio_input_flags_t flags __unused,
         const char *address __unused,
-        audio_source_t source __unused)
+        audio_source_t source)
 {
 
     ALOGV("adev_open_input_stream...");
